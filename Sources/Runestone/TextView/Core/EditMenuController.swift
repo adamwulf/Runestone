@@ -12,15 +12,17 @@ final class EditMenuController: NSObject {
     weak var delegate: EditMenuControllerDelegate?
 
 #if compiler(>=5.7)
+#if !targetEnvironment(macCatalyst)
     @available(iOS 16, *)
     private var editMenuInteraction: UIEditMenuInteraction? {
         return _editMenuInteraction as? UIEditMenuInteraction
     }
     private var _editMenuInteraction: Any?
 #endif
+#endif
 
     func setupEditMenu(in view: UIView) {
-#if compiler(>=5.7)
+#if compiler(>=5.7) && !targetEnvironment(macCatalyst)
         if #available(iOS 16, *) {
             setupEditMenuInteraction(in: view)
         } else {
@@ -36,7 +38,7 @@ final class EditMenuController: NSObject {
         let endCaretRect = caretRect(at: range.location + range.length)
         let menuWidth = min(endCaretRect.maxX - startCaretRect.minX, view.frame.width)
         let menuRect = CGRect(x: startCaretRect.minX, y: startCaretRect.minY, width: menuWidth, height: startCaretRect.height)
-#if compiler(>=5.7)
+#if compiler(>=5.7) && !targetEnvironment(macCatalyst)
         if #available(iOS 16, *) {
             let point = CGPoint(x: menuRect.midX, y: menuRect.minY)
             let configuration = UIEditMenuConfiguration(identifier: nil, sourcePoint: point)
@@ -59,7 +61,7 @@ final class EditMenuController: NSObject {
 }
 
 private extension EditMenuController {
-#if compiler(>=5.7)
+#if compiler(>=5.7) && !targetEnvironment(macCatalyst)
     @available(iOS 16, *)
     private func setupEditMenuInteraction(in view: UIView) {
         let editMenuInteraction = UIEditMenuInteraction(delegate: self)
@@ -101,6 +103,7 @@ private extension EditMenuController {
 }
 
 #if compiler(>=5.7)
+#if !targetEnvironment(macCatalyst)
 @available(iOS 16, *)
 extension EditMenuController: UIEditMenuInteractionDelegate {
     func editMenuInteraction(_ interaction: UIEditMenuInteraction,
@@ -113,4 +116,5 @@ extension EditMenuController: UIEditMenuInteractionDelegate {
         }
     }
 }
+#endif
 #endif

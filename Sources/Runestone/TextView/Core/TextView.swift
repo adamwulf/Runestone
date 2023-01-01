@@ -560,6 +560,7 @@ open class TextView: UIScrollView {
         }
     }
 #if compiler(>=5.7)
+#if !targetEnvironment(macCatalyst)
     /// A boolean value that enables a text view’s built-in find interaction.
     ///
     /// After enabling the find interaction, use [`presentFindNavigator(showingReplace:)`](https://developer.apple.com/documentation/uikit/uifindinteraction/3975832-presentfindnavigator) on <doc:findInteraction> to present the find navigator.
@@ -582,16 +583,19 @@ open class TextView: UIScrollView {
         return textSearchingHelper.findInteraction
     }
 #endif
+#endif
 
     private let textInputView: TextInputView
     private let editableTextInteraction = UITextInteraction(for: .editable)
     private let nonEditableTextInteraction = UITextInteraction(for: .nonEditable)
 #if compiler(>=5.7)
+#if !targetEnvironment(macCatalyst)
     @available(iOS 16.0, *)
     private var editMenuInteraction: UIEditMenuInteraction? {
         return _editMenuInteraction as? UIEditMenuInteraction
     }
     private var _editMenuInteraction: Any?
+#endif
 #endif
     private let tapGestureRecognizer = QuickTapGestureRecognizer()
     private var _inputAccessoryView: UIView?

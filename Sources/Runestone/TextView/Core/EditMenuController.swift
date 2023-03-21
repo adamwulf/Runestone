@@ -15,7 +15,7 @@ final class EditMenuController: NSObject {
 #if !targetEnvironment(macCatalyst)
     @available(iOS 16, *)
     private var editMenuInteraction: UIEditMenuInteraction? {
-        return _editMenuInteraction as? UIEditMenuInteraction
+        _editMenuInteraction as? UIEditMenuInteraction
     }
     private var _editMenuInteraction: Any?
 #endif
@@ -79,15 +79,15 @@ private extension EditMenuController {
     }
 
     private func highlightedRange(for range: NSRange) -> HighlightedRange? {
-        return delegate?.editMenuController(self, highlightedRangeFor: range)
+        delegate?.editMenuController(self, highlightedRangeFor: range)
     }
 
     private func canReplaceText(in highlightedRange: HighlightedRange) -> Bool {
-        return delegate?.editMenuController(self, canReplaceTextIn: highlightedRange) ?? false
+        delegate?.editMenuController(self, canReplaceTextIn: highlightedRange) ?? false
     }
 
     private func caretRect(at location: Int) -> CGRect {
-        return delegate?.editMenuController(self, caretRectAt: location) ?? .zero
+        delegate?.editMenuController(self, caretRectAt: location) ?? .zero
     }
 
     private func replaceActionIfAvailable(for range: NSRange) -> UIAction? {

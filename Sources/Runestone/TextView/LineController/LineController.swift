@@ -35,14 +35,14 @@ final class LineController {
     var tabWidth: CGFloat = 10
     var constrainingWidth: CGFloat {
         get {
-            return typesetter.constrainingWidth
+            typesetter.constrainingWidth
         }
         set {
             typesetter.constrainingWidth = newValue
         }
     }
     var lineWidth: CGFloat {
-        return ceil(typesetter.maximumLineWidth)
+        ceil(typesetter.maximumLineWidth)
     }
     var lineHeight: CGFloat {
         if let lineHeight = _lineHeight {
@@ -70,17 +70,17 @@ final class LineController {
     }
     var lineBreakMode: LineBreakMode {
         get {
-            return typesetter.lineBreakMode
+            typesetter.lineBreakMode
         }
         set {
             typesetter.lineBreakMode = newValue
         }
     }
     var numberOfLineFragments: Int {
-        return typesetter.lineFragments.count
+        typesetter.lineFragments.count
     }
     var isFinishedTypesetting: Bool {
-        return typesetter.isFinishedTypesetting
+        typesetter.isFinishedTypesetting
     }
     private(set) var attributedString: NSMutableAttributedString?
 
@@ -163,11 +163,11 @@ final class LineController {
     }
 
     func lineFragmentNode(containingCharacterAt location: Int) -> LineFragmentNode? {
-        return lineFragmentTree.node(containingLocation: location)
+        lineFragmentTree.node(containingLocation: location)
     }
 
     func lineFragmentNode(atIndex index: Int) -> LineFragmentNode {
-        return lineFragmentTree.node(atIndex: index)
+        lineFragmentTree.node(atIndex: index)
     }
 
     func setNeedsDisplayOnLineFragmentViews() {
@@ -179,7 +179,7 @@ final class LineController {
     func setMarkedTextOnLineFragments(_ range: NSRange?) {
         for (_, lineFragmentController) in lineFragmentControllers {
             let lineFragment = lineFragmentController.lineFragment
-            if let range = range, range.overlaps(lineFragment.range) {
+            if let range = range, range.overlaps(lineFragment.visibleRange) {
                 lineFragmentController.markedRange = range
             } else {
                 lineFragmentController.markedRange = nil
@@ -350,8 +350,10 @@ private extension LineController {
             lineFragmentController.lineFragment = lineFragment
             return lineFragmentController
         } else {
-            let lineFragmentController = LineFragmentController(lineFragment: lineFragment,
-                                                                invisibleCharacterConfiguration: invisibleCharacterConfiguration)
+            let lineFragmentController = LineFragmentController(
+                lineFragment: lineFragment,
+                invisibleCharacterConfiguration: invisibleCharacterConfiguration
+            )
             lineFragmentController.delegate = self
             lineFragmentControllers[lineFragment.id] = lineFragmentController
             applyTheme(to: lineFragmentController)
@@ -416,12 +418,10 @@ private extension LineController {
 
 // MARK: - UITextInput
 extension LineController {
-    func caretRect(atIndex index: Int) -> CGRect {
+    func caretRect(atIndex lineLocalLocation: Int) -> CGRect {
         for lineFragment in typesetter.lineFragments {
-            let lineRange = CTLineGetStringRange(lineFragment.line)
-            let localIndex = index - lineRange.location
-            if localIndex >= 0 && localIndex <= lineRange.length {
-                let xPosition = CTLineGetOffsetForStringIndex(lineFragment.line, index, nil)
+            if let caretLocation = lineFragment.caretLocation(forLineLocalLocation: lineLocalLocation) {
+                let xPosition = CTLineGetOffsetForStringIndex(lineFragment.line, caretLocation, nil)
                 let yPosition = lineFragment.yPosition + (lineFragment.scaledSize.height - lineFragment.baseSize.height) / 2
                 return CGRect(x: xPosition, y: yPosition, width: Caret.width, height: lineFragment.baseSize.height)
             }
@@ -430,16 +430,14 @@ extension LineController {
         return CGRect(x: 0, y: yPosition, width: Caret.width, height: estimatedLineFragmentHeight)
     }
 
-    func firstRect(for range: NSRange) -> CGRect {
+    func firstRect(for lineLocalRange: NSRange) -> CGRect {
         for lineFragment in typesetter.lineFragments {
-            let line = lineFragment.line
-            let lineRange = CTLineGetStringRange(line)
-            let index = range.location
-            if index >= 0 && index <= lineRange.length {
-                let finalIndex = min(lineRange.location + lineRange.length, range.location + range.length)
-                let xStart = CTLineGetOffsetForStringIndex(line, index, nil)
-                let xEnd = CTLineGetOffsetForStringIndex(line, finalIndex, nil)
-                return CGRect(x: xStart, y: lineFragment.yPosition, width: xEnd - xStart, height: lineFragment.scaledSize.height)
+            if let caretRange = lineFragment.caretRange(forLineLocalRange: lineLocalRange) {
+                let finalIndex = min(lineFragment.visibleRange.upperBound, caretRange.upperBound)
+                let xStart = CTLineGetOffsetForStringIndex(lineFragment.line, caretRange.location, nil)
+                let xEnd = CTLineGetOffsetForStringIndex(lineFragment.line, finalIndex, nil)
+                let yPosition = lineFragment.yPosition + (lineFragment.scaledSize.height - lineFragment.baseSize.height) / 2
+                return CGRect(x: xStart, y: yPosition, width: xEnd - xStart, height: lineFragment.baseSize.height)
             }
         }
         return CGRect(x: 0, y: 0, width: 0, height: estimatedLineFragmentHeight * lineFragmentHeightMultiplier)
@@ -458,8 +456,7 @@ extension LineController {
 extension LineController: LineFragmentControllerDelegate {
     func string(in controller: LineFragmentController) -> String? {
         let lineFragment = controller.lineFragment
-        let cfRange = CTLineGetStringRange(lineFragment.line)
-        let range = NSRange(location: line.location + cfRange.location, length: cfRange.length)
+        let range = NSRange(location: line.location + lineFragment.visibleRange.location, length: lineFragment.visibleRange.length)
         return stringView.substring(in: range)
     }
 }

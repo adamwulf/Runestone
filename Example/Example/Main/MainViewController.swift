@@ -68,6 +68,9 @@ private extension MainViewController {
         let themeSetting = UserDefaults.standard.theme
         let theme = themeSetting.makeTheme()
         let state = TextViewState(text: text, theme: theme, language: .javaScript)
+        if ProcessInfo.processInfo.useCRLFLineEndings {
+            contentView.textView.lineEndings = .crlf
+        }
         contentView.textView.editorDelegate = self
         contentView.textView.setState(state)
     }
@@ -154,7 +157,7 @@ private extension MainViewController {
     }
 
     private func makeThemeMenuElements() -> [UIMenuElement] {
-        return [
+        [
             UIAction(title: "Theme") { [weak self] _ in
                 self?.presentThemePicker()
             }
@@ -212,7 +215,7 @@ extension MainViewController: TextViewDelegate {
     }
 
     func textView(_ textView: TextView, canReplaceTextIn highlightedRange: HighlightedRange) -> Bool {
-        return true
+        true
     }
 }
 

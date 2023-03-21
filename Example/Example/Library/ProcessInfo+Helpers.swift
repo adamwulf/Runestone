@@ -2,6 +2,10 @@ import Foundation
 
 extension ProcessInfo {
     var disableTextPersistance: Bool {
-        return environment["disableTextPersistance"] != nil
+        environment["disableTextPersistance"] != nil
+    }
+
+    var useCRLFLineEndings: Bool {
+        environment["crlfLineEndings"] != nil
     }
 }
